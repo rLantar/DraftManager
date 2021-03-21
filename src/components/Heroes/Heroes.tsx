@@ -1,5 +1,6 @@
 import React, {FC, useState} from 'react';
 import {
+    Avatar,
     Box, Checkbox,
     Container, IconButton,
     makeStyles,
@@ -12,7 +13,7 @@ import {
     TableRow, Toolbar, Tooltip, Typography
 } from "@material-ui/core";
 import {fullHeightFlex} from "../../styles/fullHeight";
-import {useQuery} from "react-query";
+import {useMutation, useQuery} from "react-query";
 import {draftDatabase} from "../../core/firebase";
 import EditHeroesDialog from "./EditHeroesDialog";
 import AddIcon from "@material-ui/icons/Add";
@@ -24,7 +25,19 @@ export type Hero = {
     image: string,
     name: string,
     points: number,
-    role: string
+    role: string,
+
+}
+
+
+export function convertHeroTypes(data: any): Hero {
+    return {
+        id: Number(data.id),
+        image: data.image,
+        name: data.name,
+        points: Number(data.points),
+        role: data.role
+    }
 }
 
 const useStyles = makeStyles(
@@ -56,7 +69,7 @@ function Heroes() {
     const classes = useStyles();
     const [selectedHero, setSelectedHero] = useState<Hero>();
     const [createNew, setCreateNew] = useState<boolean>(false);
-    const [deleteHero, setDeleteHero] = useState<boolean>(false);
+    const [deleteHeroModal, setDeleteHeroModal] = useState<boolean>(false);
     const [selected, setSelected] = React.useState<number[]>([]);
 
 
@@ -69,24 +82,63 @@ function Heroes() {
         return (await draftDatabase.ref("/heroes").get()).val();
     })
 
+    const {mutateAsync: createHero, isLoading: isCreating, isError: createError} = useMutation(async (data: Hero) => {
+        return draftDatabase.ref(`/heroes/${data.id}`).set(data);
+    })
+
+    const {mutateAsync: updateHero, isLoading: isUpdating, isError: updateError} = useMutation(async (data: Hero) => {
+        return draftDatabase.ref(`/heroes/${data.id}`).set(data);
+    })
+
+    const {
+        mutateAsync: deleteHero,
+        isLoading: isDeleting,
+        isError: deleteError
+    } = useMutation(async (data: number[]) => {
+        const toDelete: any = {};
+        data.forEach(id => {
+            toDelete[id] = null;
+        })
+        return draftDatabase.ref(`/heroes`).update(toDelete);
+    })
+
 
     const handleClick = (hero: Hero) => {
         setSelectedHero(hero);
     }
 
     const onEditConfirm = async (data: Hero) => {
-        console.log(data);
-        setSelectedHero(undefined);
+        try {
+            await updateHero(data)
+            await refetch();
+            setSelected([]);
+            setSelectedHero(undefined);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     const onCreateConfirm = async (data: Hero) => {
-        console.log(data);
-        setCreateNew(false);
+        try {
+            await createHero(data)
+            await refetch();
+            setSelected([]);
+            setCreateNew(false);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
-    const onConfirmDelete = () => {
-        console.log(selected);
-        setDeleteHero(false);
+    const onConfirmDelete = async () => {
+        try {
+            await deleteHero(selected)
+            await refetch();
+            setSelected([]);
+            setDeleteHeroModal(false);
+        } catch (e) {
+            console.error(e);
+        }
+
     }
 
     const isSelected = (id: number) => selected.indexOf(id) !== -1;
@@ -128,21 +180,21 @@ function Heroes() {
         <Container maxWidth={'lg'} className={classes.root}>
 
             {
-                selectedHero && <EditHeroesDialog isLoading={heroesLoading} hero={selectedHero} open={true}
+                selectedHero && <EditHeroesDialog isLoading={isUpdating} hero={selectedHero} open={true}
                                                   onCancel={() => setSelectedHero(undefined)}
                                                   onConfirm={(data: Hero) => onEditConfirm(data)}/>
             }
 
             {
-                createNew && <EditHeroesDialog isLoading={heroesLoading} open={true}
+                createNew && <EditHeroesDialog isLoading={isCreating} open={true}
                                                onCancel={() => setCreateNew(false)}
                                                onConfirm={(data: Hero) => onCreateConfirm(data)}/>
             }
             {
-                deleteHero && <DeleteHeroesDialog isLoading={heroesLoading} open={true}
-                                                  numSelected={numSelected}
-                                                  onCancel={() => setDeleteHero(false)}
-                                                  onConfirm={() => onConfirmDelete()}/>
+                deleteHeroModal && <DeleteHeroesDialog isLoading={isDeleting} open={true}
+                                                       numSelected={numSelected}
+                                                       onCancel={() => setDeleteHeroModal(false)}
+                                                       onConfirm={() => onConfirmDelete()}/>
             }
 
 
@@ -163,7 +215,7 @@ function Heroes() {
                         {
                             numSelected > 0 ? (
                                     <Tooltip title="Delete">
-                                        <IconButton aria-label="delete" onClick={() => setDeleteHero(true)}>
+                                        <IconButton aria-label="delete" onClick={() => setDeleteHeroModal(true)}>
                                             <DeleteIcon/>
                                         </IconButton>
                                     </Tooltip>
@@ -213,7 +265,7 @@ function Heroes() {
                                 <TableCell>{row.id}</TableCell>
                                 <TableCell>{row.name}</TableCell>
                                 <TableCell>
-                                    {row.image}
+                                    <Avatar src={row.image} variant={'rounded'}>A</Avatar>
                                 </TableCell>
                                 <TableCell>
                                     {row.points}

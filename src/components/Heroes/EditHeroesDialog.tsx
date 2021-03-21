@@ -9,7 +9,7 @@ import {
     TextField,
     Typography
 } from '@material-ui/core';
-import {Hero} from "./Heroes";
+import {convertHeroTypes, Hero} from "./Heroes";
 import {Controller, useForm} from "react-hook-form";
 
 //x//////////////////////////////////////////////////
@@ -41,14 +41,14 @@ const EditHeroesDialog: FC<ConfirmTransactionDialogProps> = ({
 
     const classes = useStyles();
 
-    const {handleSubmit, errors, control, watch} = useForm<Hero>({
+    const {handleSubmit, errors, control} = useForm<Hero>({
         defaultValues: {
             ...hero
         }
     });
 
     const onSubmit = (data: Hero) => {
-        onConfirm && onConfirm(data);
+        onConfirm && onConfirm(convertHeroTypes(data));
     }
 
     return (
