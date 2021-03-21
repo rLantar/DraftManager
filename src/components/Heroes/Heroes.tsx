@@ -79,7 +79,7 @@ function Heroes() {
         isError: heroesLoadingError,
         refetch
     } = useQuery<Hero[]>(['heroes'], async () => {
-        return (await draftDatabase.ref("/heroes").get()).val();
+        return (await draftDatabase.ref("/heroes").get()).val().filter((h: Hero) => !!h);
     })
 
     const {mutateAsync: createHero, isLoading: isCreating, isError: createError} = useMutation(async (data: Hero) => {
