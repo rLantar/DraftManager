@@ -114,7 +114,7 @@ function Login() {
 
 
             <CardActions classes={{spacing: classes.actionsSpacing}}>
-                <Button variant="contained" color="primary" type={'submit'}
+                <Button variant="contained" color="secondary" type={'submit'}
                         disabled={disabled}>login
                 </Button>
             </CardActions>

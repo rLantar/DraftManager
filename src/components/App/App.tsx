@@ -5,7 +5,7 @@ import {AppStore} from "../../@redux/reducers";
 import {makeStyles} from "@material-ui/core";
 import {fullHeightFlex} from "../../styles/fullHeight";
 import LoginPage from "../LoginPage/LoginPage";
-import Home from "../Home/Home";
+import Heroes from "../Heroes/Heroes";
 import Header from "../Header/Header";
 
 
@@ -39,7 +39,7 @@ function App() {
 
 
         return <Switch>
-            <Route component={Home}/>
+            <Route component={Heroes}/>
         </Switch>
     }
 

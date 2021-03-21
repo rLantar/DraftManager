@@ -23,6 +23,7 @@ const useStyles = makeStyles(
             },
             disconnect: {
                 fontSize: 12,
+                cursor: 'pointer'
             },
             avatar: {
                 background: theme.palette.secondary.light
@@ -49,7 +50,7 @@ const Header = () => {
     return (
 
         <AppBar position="sticky">
-            <Container>
+            <Container maxWidth={'lg'} disableGutters>
                 <Toolbar>
 
                     <div className={classes.fill}/>
